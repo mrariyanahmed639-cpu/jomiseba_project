@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>জমির ম্যাপ আবেদন প্রোটোটাইপ | জমি তথ্য সেবা</title>
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+    <header>
+        <h1>জমির ম্যাপ ও আবেদন সার্ভিস</h1>
+        <p>আপনার প্রয়োজনীয় জমির ম্যাপ দ্রুত অনলাইনে পান</p>
+    </header>
+
+    <main>
+        <section id="map-section">
+            <h2>🗺️ জেলা ম্যাপ এবং জমি নির্বাচন</h2>
+            <div id="mapid" style="height: 500px; border: 1px solid #ccc; border-radius: 5px;"></div>
+            
+            <div class="search-box">
+                <input type="text" id="khatian_search" placeholder="দাগ নম্বর/খতিয়ান নম্বর লিখে খুঁজুন...">
+                <button onclick="searchLand()">অনুসন্ধান</button>
+            </div>
+        </section>
+
+        <section id="application-section" style="display: none;">
+            <h2>📝 ম্যাপের জন্য আবেদন ফর্ম</h2>
+            
+            <form id="landApplicationForm">
+                <h3>জমির নির্বাচিত তথ্য</h3>
+                <p>নির্বাচিত দাগ নম্বর: <strong id="selected_plot_id">N/A</strong></p>
+                <p>মৌজা: <strong id="selected_mouza">N/A</strong></p>
+                <hr>
+
+                <h3>আবেদনকারীর বিবরণ</h3>
+                <div class="form-group">
+                    <label for="applicant_name">আবেদনকারীর নাম *</label>
+                    <input type="text" id="applicant_name" name="applicant_name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="mobile_number">মোবাইল নম্বর *</label>
+                    <input type="tel" id="mobile_number" name="mobile_number" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nid_number">জাতীয় পরিচয়পত্র (NID)</label>
+                    <input type="text" id="nid_number" name="nid_number">
+                </div>
+
+                <h3>ম্যাপের প্রয়োজনীয়তা</h3>
+                <div class="form-group">
+                    <label for="copy_count">প্রয়োজনীয় কপির সংখ্যা *</label>
+                    <input type="number" id="copy_count" name="copy_count" min="1" value="1" required onchange="calculateFee()">
+                </div>
+                
+                <div class="form-group">
+                    <label for="map_type">ম্যাপের ধরণ (যেমন: ফটোকপি/উচ্চ রেজোলিউশন)</label>
+                    <select id="map_type" name="map_type">
+                        <option value="photocopy">ফটোকপি</option>
+                        <option value="high_resolution">উচ্চ রেজোলিউশন (অতিরিক্ত ফি প্রযোজ্য)</option>
+                    </select>
+                </div>
+
+
+                <h3>ডেলিভারি ঠিকানা ও ফি</h3>
+                <div class="form-group">
+                    <label for="delivery_address">পূর্ণাঙ্গ ডেলিভারি ঠিকানা *</label>
+                    <textarea id="delivery_address" name="delivery_address" rows="3" required></textarea>
+                </div>
+
+                <p style="font-size: 1.2rem; font-weight: bold;">মোট প্রসেসিং ফি: <span id="total_fee">0</span> টাকা</p>
+
+                <button type="submit">আবেদন নিশ্চিত করুন ও পেমেন্ট করুন</button>
+            </form>
+            
+        </section>
+        
+    </main>
+
+    <footer>
+        <p>&copy; 2025 জমি তথ্য সেবা। সকল অধিকার সংরক্ষিত।</p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+// A. ম্যাপ ইনিশিয়ালাইজেশন
+// ম্যাপটিকে একটি নির্দিষ্ট স্থানাঙ্কে (যেমন: বাংলাদেশের কেন্দ্রে) এবং জুম লেভেলে লোড করা হচ্ছে
+const map = L.map('mapid').setView([24.5, 90.5], 8); // [Lat, Lon] এবং Zoom Level 8
+
+// B. বেস ম্যাপ যুক্ত করা (OpenStreetMap)
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+
+// C. ডামি জমির ম্যাপ ডেটা (GeoJSON)
+// ***দ্রষ্টব্য: বাস্তব প্রকল্পে, এই ডেটা GeoServer WMS/WFS থেকে লোড করা হবে।***
+const dummyLandData = {
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "dage_no": "101",
+                "khatian_no": "503",
+                "mouza": "পরীক্ষা মৌজা-ক",
+                "owner": "জনাব আ. রহমান"
+            },
+            // এই স্থানাঙ্কগুলো ম্যাপে একটি কাল্পনিক জমি তৈরি করবে
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [[[90.45, 24.55], [90.55, 24.55], [90.55, 24.45], [90.45, 24.45], [90.45, 24.55]]]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "dage_no": "102",
+                "khatian_no": "504",
+                "mouza": "পরীক্ষা মৌজা-খ",
+                "owner": "মিসেস আ. সুলতানা"
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [[[90.6, 24.55], [90.7, 24.55], [90.7, 24.45], [90.6, 24.45], [90.6, 24.55]]]
+            }
+        }
+    ]
+};
+
+let selectedFeatureLayer = null; // নির্বাচিত জমির জন্য হাইলাইট লেয়ার
+
+// D. GeoJSON লেয়ার যোগ করা এবং ক্লিক ইভেন্ট সেট করা
+const landLayer = L.geoJSON(dummyLandData, {
+    style: function(feature) {
+        return { color: '#007bff', weight: 2, opacity: 0.7, fillColor: '#95b7ff', fillOpacity: 0.3 };
+    },
+    onEachFeature: function(feature, layer) {
+        // পপআপ তৈরি করা
+        layer.bindPopup("দাগ নং: " + feature.properties.dage_no + "<br>খতিয়ান নং: " + feature.properties.khatian_no + "<br>মৌজা: " + feature.properties.mouza);
+        
+        // ক্লিক করলে জমি নির্বাচন ফাংশন কল করা
+        layer.on('click', function (e) {
+            selectLand(feature, layer);
+        });
+    }
+}).addTo(map);
+
+// E. জমি নির্বাচন ফাংশন
+function selectLand(feature, layer) {
+    // 1. আগের হাইলাইট মুছে ফেলা (যদি থাকে)
+    if (selectedFeatureLayer) {
+        map.removeLayer(selectedFeatureLayer);
+    }
+
+    // 2. নতুন জমি হাইলাইট করা (স্টাইল পরিবর্তন করে)
+    // জমিটিকে লাল বর্ডার ও হলুদ ফিলাপ দিয়ে হাইলাইট করা
+    selectedFeatureLayer = L.geoJSON(feature, {
+        style: { color: 'red', weight: 4, fillColor: 'yellow', fillOpacity: 0.6 }
+    }).addTo(map);
+    
+    // 3. ম্যাপটি নির্বাচিত জমির উপরে ফোকাস করা
+    if (layer.getBounds) {
+        map.fitBounds(layer.getBounds());
+    }
+
+    // 4. আবেদন ফর্ম দেখানো
+    document.getElementById('application-section').style.display = 'block';
+
+    // 5. আবেদন ফর্মে ডেটা পূরণ করা
+    document.getElementById('selected_plot_id').textContent = feature.properties.dage_no;
+    document.getElementById('selected_mouza').textContent = feature.properties.mouza;
+
+    // 6. ফি গণনা কল করা
+    calculateFee();
+    alert(`জমির দাগ নং ${feature.properties.dage_no} নির্বাচিত হয়েছে। এবার আবেদন ফর্ম পূরণ করুন।`);
+}
+
+// F. অনুসন্ধান ফাংশন
+function searchLand() {
+    const searchId = document.getElementById('khatian_search').value.trim();
+    if (searchId) {
+        // দাগ নম্বর বা খতিয়ান নম্বর দিয়ে অনুসন্ধান করা হচ্ছে
+        const foundFeature = dummyLandData.features.find(f => 
+            f.properties.dage_no === searchId || f.properties.khatian_no === searchId
+        );
+        
+        if (foundFeature) {
+            // যদি খুঁজে পাওয়া যায়, তবে সেই জমিটিকে ম্যাপে নির্বাচন করা
+            const featureLayer = landLayer.getLayers().find(layer => layer.feature.properties.dage_no === foundFeature.properties.dage_no);
+            if (featureLayer) {
+                 selectLand(foundFeature, featureLayer);
+            }
+        } else {
+            alert("দুঃখিত! এই দাগ নম্বর/খতিয়ান নম্বর পাওয়া যায়নি।");
+        }
+    } else {
+        alert("অনুসন্ধানের জন্য দাগ বা খতিয়ান নম্বর দিন।");
+    }
+}
+
+// G. ফি গণনা ফাংশন
+function calculateFee() {
+    const copyCountInput = document.getElementById('copy_count');
+    const mapTypeSelect = document.getElementById('map_type');
+
+    let copyCount = parseInt(copyCountInput.value) || 1; 
+    const mapType = mapTypeSelect.value;
+    
+    // মূল্য নির্ধারণ (প্রোটোট
